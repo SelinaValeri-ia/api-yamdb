@@ -123,3 +123,5 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10,
     'DEFAULT_FILTER_BACKENDS': ['rest_framework.filters.SearchFilter'],
 }
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
