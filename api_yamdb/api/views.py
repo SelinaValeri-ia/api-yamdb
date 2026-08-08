@@ -1,5 +1,6 @@
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
@@ -132,11 +133,16 @@ class TitleViewSet(
         Title.objects
         .select_related('category')
         .prefetch_related('genre')
+        .annotate(rating=Avg('reviews__score'))
+        .order_by('id')
     )
 
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (SearchFilter,)
     search_fields = ('name',)
+    http_method_names = [
+        'get', 'post', 'patch', 'delete', 'head', 'options',
+    ]
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
