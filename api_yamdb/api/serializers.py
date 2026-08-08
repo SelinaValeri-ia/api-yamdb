@@ -1,5 +1,6 @@
 from datetime import date
 
+from django.contrib.auth.validators import UnicodeUsernameValidator
 from rest_framework import serializers
 
 from reviews.models import (
@@ -9,17 +10,16 @@ from reviews.models import (
     Review,
     Title,
 )
+from users.models import User
 
 
 class CategorySerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Category
         fields = ('name', 'slug')
 
 
 class GenreSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Genre
         fields = ('name', 'slug')
@@ -75,10 +75,27 @@ class TitleSerializer(serializers.ModelSerializer):
 
 
 class ReviewWriteSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Review
-        fields = ('text', 'score')
+        fields = ('id', 'text', 'score')
+        read_only_fields = ('id',)
+
+    def validate(self, attrs):
+        if self.instance is not None:
+            return attrs
+
+        request = self.context['request']
+        title_id = self.context['view'].kwargs['title_id']
+
+        if Review.objects.filter(
+            author=request.user,
+            title_id=title_id
+        ).exists():
+            raise serializers.ValidationError(
+                'Вы уже оставляли отзыв на это произведение.'
+            )
+
+        return attrs
 
 
 class ReviewReadSerializer(serializers.ModelSerializer):
@@ -96,10 +113,10 @@ class ReviewReadSerializer(serializers.ModelSerializer):
 
 
 class CommentWriteSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Comment
-        fields = ('text',)
+        fields = ('id', 'text')
+        read_only_fields = ('id',)
 
 
 class CommentReadSerializer(serializers.ModelSerializer):
@@ -113,3 +130,75 @@ class CommentReadSerializer(serializers.ModelSerializer):
             'author',
             'pub_date',
         )
+
+
+class SignUpSerializer(serializers.Serializer):
+    email = serializers.EmailField(max_length=254)
+    username = serializers.CharField(
+        max_length=150,
+        validators=[UnicodeUsernameValidator()],
+    )
+
+    def validate_username(self, value):
+        if value.lower() == 'me':
+            raise serializers.ValidationError(
+                'Использовать имя "me" в качестве username запрещено.'
+            )
+        return value
+
+    def validate(self, attrs):
+        email = attrs['email']
+        username = attrs['username']
+
+        user_by_email = User.objects.filter(email=email).first()
+        user_by_username = User.objects.filter(username=username).first()
+
+        if user_by_email and user_by_email.username != username:
+            raise serializers.ValidationError({
+                'email': (
+                    'Пользователь с таким email уже зарегистрирован '
+                    'под другим username.'
+                ),
+            })
+
+        if user_by_username and user_by_username.email != email:
+            raise serializers.ValidationError({
+                'username': (
+                    'Пользователь с таким username уже зарегистрирован '
+                    'с другим email.'
+                ),
+            })
+
+        return attrs
+
+
+class TokenSerializer(serializers.Serializer):
+    username = serializers.CharField(required=True)
+    confirmation_code = serializers.CharField(required=True)
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'bio',
+            'role',
+        )
+
+
+class UserMeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'bio',
+            'role',
+        )
+        read_only_fields = ('role',)
