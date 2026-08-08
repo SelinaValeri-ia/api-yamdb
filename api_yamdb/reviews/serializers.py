@@ -7,7 +7,20 @@ class ReviewWriteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Review
-        fields = ('text', 'score')
+        fields = ('id', 'text', 'score')
+        read_only_fields = ('id',)
+
+    def validate(self, attrs):
+        if self.instance is None:
+            request = self.context['request']
+            title_id = self.context['view'].kwargs['title_id']
+            if Review.objects.filter(
+                title_id=title_id, author=request.user,
+            ).exists():
+                raise serializers.ValidationError(
+                    'Вы уже оставляли отзыв на это произведение.'
+                )
+        return attrs
 
 
 class ReviewReadSerializer(serializers.ModelSerializer):
@@ -29,7 +42,8 @@ class CommentWriteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ('text', )
+        fields = ('id', 'text')
+        read_only_fields = ('id',)
 
 
 class CommentReadSerializer(serializers.ModelSerializer):

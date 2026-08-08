@@ -1,6 +1,8 @@
+from django.shortcuts import get_object_or_404
 from rest_framework.viewsets import ModelViewSet
 
-from reviews.models import Review, Comment
+from api.permissions import IsAuthorOrModeratorOrAdminOrReadOnly
+from reviews.models import Review, Title
 from reviews.serializers import (
     ReviewReadSerializer,
     ReviewWriteSerializer,
@@ -8,16 +10,18 @@ from reviews.serializers import (
     CommentWriteSerializer
 )
 
-# TODO:
-# После merge permissions
-# подключить IsAuthorModeratorAdminOrReadOnly
 
 class ReviewViewSet(ModelViewSet):
+    permission_classes = (IsAuthorOrModeratorOrAdminOrReadOnly,)
+    http_method_names = [
+        'get', 'post', 'patch', 'delete', 'head', 'options',
+    ]
+
+    def get_title(self):
+        return get_object_or_404(Title, pk=self.kwargs['title_id'])
 
     def get_queryset(self):
-
-        title_id = self.kwargs['title_id']
-        return Review.objects.filter(title_id=title_id)
+        return self.get_title().reviews.all()
 
     def get_serializer_class(self):
 
@@ -29,18 +33,25 @@ class ReviewViewSet(ModelViewSet):
 
         serializer.save(
             author=self.request.user,
+            title=self.get_title(),
         )
 
-# TODO:
-# После merge ветки с Title добавить:
-# serializer.save(author=self.request.user, title=title)
 
 class CommentViewSet(ModelViewSet):
+    permission_classes = (IsAuthorOrModeratorOrAdminOrReadOnly,)
+    http_method_names = [
+        'get', 'post', 'patch', 'delete', 'head', 'options',
+    ]
+
+    def get_review(self):
+        return get_object_or_404(
+            Review,
+            pk=self.kwargs['review_id'],
+            title_id=self.kwargs['title_id'],
+        )
 
     def get_queryset(self):
-
-            review_id = self.kwargs['review_id']
-            return Comment.objects.filter(review_id=review_id)
+        return self.get_review().comments.all()
 
     def get_serializer_class(self):
 
@@ -52,5 +63,5 @@ class CommentViewSet(ModelViewSet):
 
         serializer.save(
             author=self.request.user,
-            ) # TODO:
-# После merge добавить review=review
+            review=self.get_review(),
+        )

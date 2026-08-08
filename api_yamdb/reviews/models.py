@@ -76,11 +76,12 @@ class Review(models.Model):
         auto_now_add=True,
         verbose_name='Дата публикации'
     )
-    title = models.IntegerField(
-        verbose_name='Произведение'
+    title = models.ForeignKey(
+        Title,
+        on_delete=models.CASCADE,
+        verbose_name='Произведение',
+        related_name='reviews',
     )
-    # TODO:
-# Проверить после merge приложения titles.
 
     def __str__(self):
         return f'Отзыв от {self.author} : {self.text[:50]}'
