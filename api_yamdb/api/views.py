@@ -1,15 +1,17 @@
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
+from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import AccessToken
 
 from users.models import User
 
 from .permissions import IsAdmin
 from .serializers import (
-    SignUpSerializer, UserMeSerializer, UserSerializer,
+    SignUpSerializer, TokenSerializer, UserMeSerializer, UserSerializer,
 )
 
 
@@ -31,6 +33,25 @@ def signup(request):
     )
 
     return Response(serializer.validated_data, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def token_obtain(request):
+    serializer = TokenSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    username = serializer.validated_data['username']
+    confirmation_code = serializer.validated_data['confirmation_code']
+
+    user = get_object_or_404(User, username=username)
+    if not default_token_generator.check_token(user, confirmation_code):
+        return Response(
+            {'confirmation_code': 'Неверный код подтверждения.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    token = AccessToken.for_user(user)
+    return Response({'token': str(token)}, status=status.HTTP_200_OK)
 
 
 class UserViewSet(viewsets.ModelViewSet):
