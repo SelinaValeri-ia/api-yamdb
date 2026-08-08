@@ -1,3 +1,4 @@
+"""Вложенные маршруты отзывов и комментариев."""
 from rest_framework.routers import DefaultRouter
 
 from reviews.views import CommentViewSet, ReviewViewSet

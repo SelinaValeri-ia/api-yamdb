@@ -1,3 +1,4 @@
+"""Модели произведений, категорий, жанров, отзывов и комментариев."""
 from datetime import date
 
 from django.conf import settings
@@ -8,6 +9,8 @@ from django.db import models
 
 
 class Category(models.Model):
+    """Категория произведения (например, «Фильмы»)."""
+
     name = models.CharField(max_length=256)
     slug = models.SlugField(max_length=50, unique=True)
 
@@ -21,6 +24,8 @@ class Category(models.Model):
 
 
 class Genre(models.Model):
+    """Жанр, которым может быть помечено произведение."""
+
     name = models.CharField(max_length=256)
     slug = models.SlugField(max_length=50, unique=True)
 
@@ -34,6 +39,8 @@ class Genre(models.Model):
 
 
 class Title(models.Model):
+    """Произведение — фильм, книга или песня, к которому пишут отзывы."""
+
     name = models.CharField(max_length=256)
     year = models.PositiveSmallIntegerField(
         validators=[
@@ -62,6 +69,8 @@ class Title(models.Model):
 
 
 class Review(models.Model):
+    """Отзыв пользователя на произведение с оценкой от 1 до 10."""
+
     text = models.TextField(verbose_name='Текст отзыва')
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -99,6 +108,8 @@ class Review(models.Model):
 
 
 class Comment(models.Model):
+    """Комментарий пользователя к отзыву."""
+
     text = models.TextField(verbose_name='Текст комментария')
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL,

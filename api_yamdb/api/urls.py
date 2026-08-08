@@ -1,3 +1,4 @@
+"""Маршруты аутентификации и роутер users/categories/genres/titles."""
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 

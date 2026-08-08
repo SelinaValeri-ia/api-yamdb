@@ -1,3 +1,4 @@
+"""Сериализаторы регистрации, токена, пользователей и произведений."""
 from datetime import date
 
 from django.contrib.auth.validators import UnicodeUsernameValidator
@@ -8,6 +9,8 @@ from users.models import User
 
 
 class SignUpSerializer(serializers.Serializer):
+    """Самостоятельная регистрация по email и username."""
+
     email = serializers.EmailField(max_length=254)
     username = serializers.CharField(
         max_length=150,
@@ -22,6 +25,7 @@ class SignUpSerializer(serializers.Serializer):
         return value
 
     def validate(self, attrs):
+        """Запрещает регистрацию с email/username другого пользователя."""
         email = attrs['email']
         username = attrs['username']
         user_by_email = User.objects.filter(email=email).first()
@@ -44,11 +48,15 @@ class SignUpSerializer(serializers.Serializer):
 
 
 class TokenSerializer(serializers.Serializer):
+    """Обмен username и кода подтверждения на JWT-токен."""
+
     username = serializers.CharField(required=True)
     confirmation_code = serializers.CharField(required=True)
 
 
 class UserSerializer(serializers.ModelSerializer):
+    """Полный набор полей пользователя для администратора."""
+
     class Meta:
         model = User
         fields = (
@@ -57,6 +65,8 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserMeSerializer(serializers.ModelSerializer):
+    """Профиль пользователя для self-service /users/me/ (роль read-only)."""
+
     class Meta:
         model = User
         fields = (
@@ -66,18 +76,24 @@ class UserMeSerializer(serializers.ModelSerializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    """Категория произведения."""
+
     class Meta:
         model = Category
         fields = ('name', 'slug')
 
 
 class GenreSerializer(serializers.ModelSerializer):
+    """Жанр произведения."""
+
     class Meta:
         model = Genre
         fields = ('name', 'slug')
 
 
 class TitleReadSerializer(serializers.ModelSerializer):
+    """Произведение для чтения: вложенные category/genre и рейтинг."""
+
     category = CategorySerializer(read_only=True)
     genre = GenreSerializer(many=True, read_only=True)
     rating = serializers.IntegerField(read_only=True)
@@ -96,6 +112,8 @@ class TitleReadSerializer(serializers.ModelSerializer):
 
 
 class TitleSerializer(serializers.ModelSerializer):
+    """Произведение для создания/изменения: category/genre по slug."""
+
     category = serializers.SlugRelatedField(
         slug_field='slug',
         queryset=Category.objects.all(),

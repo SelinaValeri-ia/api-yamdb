@@ -1,9 +1,11 @@
+"""Сериализаторы отзывов и комментариев."""
 from rest_framework import serializers
 
 from reviews.models import Review, Comment
 
 
 class ReviewWriteSerializer(serializers.ModelSerializer):
+    """Создание и изменение отзыва пользователя на произведение."""
 
     class Meta:
         model = Review
@@ -11,6 +13,7 @@ class ReviewWriteSerializer(serializers.ModelSerializer):
         read_only_fields = ('id',)
 
     def validate(self, attrs):
+        """Запрещает повторный отзыв того же автора на то же произведение."""
         if self.instance is None:
             request = self.context['request']
             title_id = self.context['view'].kwargs['title_id']
@@ -24,6 +27,7 @@ class ReviewWriteSerializer(serializers.ModelSerializer):
 
 
 class ReviewReadSerializer(serializers.ModelSerializer):
+    """Чтение отзыва с именем автора вместо его id."""
 
     author = serializers.StringRelatedField(read_only=True)
 
@@ -39,6 +43,7 @@ class ReviewReadSerializer(serializers.ModelSerializer):
 
 
 class CommentWriteSerializer(serializers.ModelSerializer):
+    """Создание и изменение комментария к отзыву."""
 
     class Meta:
         model = Comment
@@ -47,6 +52,7 @@ class CommentWriteSerializer(serializers.ModelSerializer):
 
 
 class CommentReadSerializer(serializers.ModelSerializer):
+    """Чтение комментария с именем автора вместо его id."""
 
     author = serializers.StringRelatedField(read_only=True)
 

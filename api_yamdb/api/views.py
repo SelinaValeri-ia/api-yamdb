@@ -1,3 +1,4 @@
+"""Вьюхи аутентификации и вьюсеты users/categories/genres/titles."""
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.db.models import Avg
@@ -28,6 +29,7 @@ from .serializers import (
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def signup(request):
+    """Регистрирует пользователя и отправляет код подтверждения на email."""
     serializer = SignUpSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     email = serializer.validated_data['email']
@@ -48,6 +50,7 @@ def signup(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def token_obtain(request):
+    """Выдаёт JWT-токен по username и коду подтверждения."""
     serializer = TokenSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     username = serializer.validated_data['username']
@@ -65,6 +68,8 @@ def token_obtain(request):
 
 
 class UserViewSet(viewsets.ModelViewSet):
+    """CRUD пользователей администратором + self-service /users/me/."""
+
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = (IsAdmin,)
@@ -81,6 +86,7 @@ class UserViewSet(viewsets.ModelViewSet):
         url_path='me',
     )
     def me(self, request):
+        """Возвращает или обновляет профиль текущего пользователя."""
         if request.method == 'PATCH':
             serializer = UserMeSerializer(
                 request.user, data=request.data, partial=True,
@@ -99,6 +105,8 @@ class CategoryViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
+    """Список, создание и удаление категорий (без detail-эндпоинта)."""
+
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = (IsAdminOrReadOnly,)
@@ -113,6 +121,8 @@ class GenreViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
+    """Список, создание и удаление жанров (без detail-эндпоинта)."""
+
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     permission_classes = (IsAdminOrReadOnly,)
@@ -129,6 +139,8 @@ class TitleViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
+    """CRUD произведений с рейтингом и фильтрами (без PUT)."""
+
     queryset = (
         Title.objects
         .select_related('category')
@@ -150,6 +162,7 @@ class TitleViewSet(
         return TitleSerializer
 
     def get_queryset(self):
+        """Фильтрует по category/genre/year/name из query-параметров."""
         queryset = super().get_queryset()
         params = self.request.query_params
 
