@@ -2,16 +2,24 @@ from datetime import date
 
 from rest_framework import serializers
 
-from reviews.models import Category, Genre, Title
+from reviews.models import (
+    Category,
+    Comment,
+    Genre,
+    Review,
+    Title,
+)
 
 
 class CategorySerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Category
         fields = ('name', 'slug')
 
 
 class GenreSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Genre
         fields = ('name', 'slug')
@@ -64,3 +72,44 @@ class TitleSerializer(serializers.ModelSerializer):
                 'Год выпуска не может быть больше текущего года.'
             )
         return value
+
+
+class ReviewWriteSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Review
+        fields = ('text', 'score')
+
+
+class ReviewReadSerializer(serializers.ModelSerializer):
+    author = serializers.StringRelatedField(read_only=True)
+
+    class Meta:
+        model = Review
+        fields = (
+            'id',
+            'text',
+            'author',
+            'score',
+            'pub_date',
+        )
+
+
+class CommentWriteSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Comment
+        fields = ('text',)
+
+
+class CommentReadSerializer(serializers.ModelSerializer):
+    author = serializers.StringRelatedField(read_only=True)
+
+    class Meta:
+        model = Comment
+        fields = (
+            'id',
+            'text',
+            'author',
+            'pub_date',
+        )
