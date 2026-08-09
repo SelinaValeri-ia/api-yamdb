@@ -1,3 +1,4 @@
+"""Management-команда импорта категорий, жанров и произведений из CSV."""
 import csv
 from pathlib import Path
 
@@ -8,6 +9,8 @@ from reviews.models import Category, Genre, Title
 
 
 class Command(BaseCommand):
+    """python manage.py load_csv [--path <каталог с category.csv и др.>]."""
+
     help = 'Импортирует категории, жанры, произведения и связи жанров из CSV.'
 
     def add_arguments(self, parser):
