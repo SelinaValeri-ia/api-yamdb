@@ -1,3 +1,4 @@
+"""Кастомная модель пользователя YaMDb."""
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
@@ -13,6 +14,8 @@ ROLE_CHOICES = (
 
 
 class User(AbstractUser):
+    """Пользователь с ролью (user/moderator/admin) и биографией."""
+
     email = models.EmailField('email address', unique=True, max_length=254)
     role = models.CharField(
         'роль',

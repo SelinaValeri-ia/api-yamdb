@@ -1,7 +1,10 @@
+"""Классы прав доступа для вьюсетов users/categories/genres/titles/reviews."""
 from rest_framework import permissions
 
 
 class IsAdmin(permissions.BasePermission):
+    """Доступ только администратору."""
+
     def has_permission(self, request, view):
         return (
             request.user.is_authenticated
@@ -10,6 +13,8 @@ class IsAdmin(permissions.BasePermission):
 
 
 class IsAdminOrReadOnly(permissions.BasePermission):
+    """Чтение всем, запись — только администратору."""
+
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
             return True
@@ -27,9 +32,9 @@ class IsAdminOrReadOnly(permissions.BasePermission):
         )
 
 
-class IsAuthorOrModeratorOrAdminOrReadOnly(
-    permissions.BasePermission
-):
+class IsAuthorOrModeratorOrAdminOrReadOnly(permissions.BasePermission):
+    """Чтение всем, запись — автору объекта, модератору или администратору."""
+
     def has_permission(self, request, view):
         return (
             request.method in permissions.SAFE_METHODS
