@@ -214,7 +214,9 @@ class ReviewViewSet(ModelViewSet):
 
     def get_queryset(self):
         title_id = self.kwargs['title_id']
-        return Review.objects.filter(title_id=title_id)
+        return Review.objects.filter(
+            title_id=title_id
+        ).select_related('author')
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
@@ -239,7 +241,9 @@ class CommentViewSet(ModelViewSet):
 
     def get_queryset(self):
         review_id = self.kwargs['review_id']
-        return Comment.objects.filter(review_id=review_id)
+        return Comment.objects.filter(
+            review_id=review_id
+        ).select_related('author')
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
