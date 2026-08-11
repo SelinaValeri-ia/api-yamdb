@@ -1,6 +1,5 @@
 """Сериализаторы регистрации, токена, пользователей и произведений."""
-from datetime import date
-
+from django.utils import timezone
 from rest_framework import serializers
 
 from reviews.models import (
@@ -148,7 +147,7 @@ class TitleSerializer(serializers.ModelSerializer):
         read_only_fields = ('id',)
 
     def validate_year(self, value):
-        if value > date.today().year:
+        if value > timezone.now().year:
             raise serializers.ValidationError(
                 'Год выпуска не может быть больше текущего года.'
             )

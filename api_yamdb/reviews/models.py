@@ -1,10 +1,9 @@
 """Модели произведений, категорий, жанров, отзывов и комментариев."""
 
-from datetime import date
-
 from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.utils import timezone
 
 
 class Category(models.Model):
@@ -42,7 +41,7 @@ class Title(models.Model):
 
     name = models.CharField(max_length=256)
     year = models.PositiveSmallIntegerField(
-        validators=[MaxValueValidator(date.today().year)],
+        validators=[MaxValueValidator(timezone.now().year)],
     )
     description = models.TextField(blank=True)
     category = models.ForeignKey(
