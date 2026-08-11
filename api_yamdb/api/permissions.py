@@ -16,19 +16,9 @@ class IsAdminOrReadOnly(permissions.BasePermission):
     """Чтение всем, запись — только администратору."""
 
     def has_permission(self, request, view):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-
-        user = request.user
-
-        return bool(
-            user
-            and user.is_authenticated
-            and (
-                user.is_admin
-                or getattr(user, 'is_superuser', False)
-                or getattr(user, 'role', None) == 'admin'
-            )
+        return (
+            request.method in permissions.SAFE_METHODS
+            or (request.user.is_authenticated and request.user.is_admin)
         )
 
 
