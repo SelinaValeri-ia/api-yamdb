@@ -6,6 +6,11 @@ from django.db import models
 from django.utils import timezone
 
 
+def get_current_year():
+    """Возвращает текущий"""
+    return timezone.now().year
+
+
 class Category(models.Model):
     """Категория произведения (например, «Фильмы»)."""
 
@@ -41,7 +46,7 @@ class Title(models.Model):
 
     name = models.CharField(max_length=256)
     year = models.PositiveSmallIntegerField(
-        validators=[MaxValueValidator(timezone.now().year)],
+        validators=[MaxValueValidator(get_current_year)],
     )
     description = models.TextField(blank=True)
     category = models.ForeignKey(
