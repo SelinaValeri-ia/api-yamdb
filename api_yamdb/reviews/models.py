@@ -90,9 +90,6 @@ class Review(models.Model):
         related_name='reviews',
     )
 
-    def __str__(self):
-        return f'Отзыв от {self.author}: {self.text[:50]}'
-
     class Meta:
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
@@ -103,6 +100,9 @@ class Review(models.Model):
                 name='unique_author_title_review',
             )
         ]
+
+    def __str__(self):
+        return f'Отзыв от {self.author}: {self.text[:50]}'
 
 
 class Comment(models.Model):
@@ -126,10 +126,10 @@ class Comment(models.Model):
         related_name='comments',
     )
 
-    def __str__(self):
-        return f'Комментарий от {self.author}: {self.text[:50]}'
-
     class Meta:
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
         ordering = ['-pub_date']
+
+    def __str__(self):
+        return f'Комментарий от {self.author}: {self.text[:50]}'
