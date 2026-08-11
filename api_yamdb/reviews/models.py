@@ -14,7 +14,7 @@ def get_current_year():
 class Category(models.Model):
     """Категория произведения (например, «Фильмы»)."""
 
-    name = models.CharField(max_length=256)
+    name = models.CharField('Название', max_length=256)
     slug = models.SlugField(max_length=50, unique=True)
 
     class Meta:
