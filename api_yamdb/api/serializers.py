@@ -1,7 +1,6 @@
 """Сериализаторы регистрации, токена, пользователей и произведений."""
 from datetime import date
 
-from django.contrib.auth.validators import UnicodeUsernameValidator
 from rest_framework import serializers
 
 from reviews.models import (
@@ -20,15 +19,8 @@ class SignUpSerializer(serializers.Serializer):
     email = serializers.EmailField(max_length=254)
     username = serializers.CharField(
         max_length=150,
-        validators=[UnicodeUsernameValidator()],
+        validators=User._meta.get_field('username').validators,
     )
-
-    def validate_username(self, value):
-        if value.lower() == 'me':
-            raise serializers.ValidationError(
-                'Использовать имя "me" в качестве username запрещено.'
-            )
-        return value
 
     def validate(self, attrs):
         """Запрещает регистрацию с email/username другого пользователя."""
