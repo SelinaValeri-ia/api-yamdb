@@ -1,16 +1,20 @@
 """Модели произведений, категорий, жанров, отзывов и комментариев."""
 
-from datetime import date
-
 from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.utils import timezone
+
+
+def get_current_year():
+    """Возвращает текущий"""
+    return timezone.now().year
 
 
 class Category(models.Model):
     """Категория произведения (например, «Фильмы»)."""
 
-    name = models.CharField(max_length=256)
+    name = models.CharField('Название', max_length=256)
     slug = models.SlugField(max_length=50, unique=True)
 
     class Meta:
@@ -42,7 +46,7 @@ class Title(models.Model):
 
     name = models.CharField(max_length=256)
     year = models.PositiveSmallIntegerField(
-        validators=[MaxValueValidator(date.today().year)],
+        validators=[MaxValueValidator(get_current_year)],
     )
     description = models.TextField(blank=True)
     category = models.ForeignKey(
@@ -90,9 +94,6 @@ class Review(models.Model):
         related_name='reviews',
     )
 
-    def __str__(self):
-        return f'Отзыв от {self.author}: {self.text[:50]}'
-
     class Meta:
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
@@ -103,6 +104,9 @@ class Review(models.Model):
                 name='unique_author_title_review',
             )
         ]
+
+    def __str__(self):
+        return f'Отзыв от {self.author}: {self.text[:50]}'
 
 
 class Comment(models.Model):
@@ -126,10 +130,10 @@ class Comment(models.Model):
         related_name='comments',
     )
 
-    def __str__(self):
-        return f'Комментарий от {self.author}: {self.text[:50]}'
-
     class Meta:
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
         ordering = ['-pub_date']
+
+    def __str__(self):
+        return f'Комментарий от {self.author}: {self.text[:50]}'
