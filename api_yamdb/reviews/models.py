@@ -1,12 +1,22 @@
-from datetime import date
-
 from django.core.validators import MaxValueValidator
 from django.db import models
+from django.utils import timezone
+
+
+def current_year():
+    return timezone.localdate().year
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=256)
-    slug = models.SlugField(max_length=50, unique=True)
+    name = models.CharField(
+        'Название',
+        max_length=256,
+    )
+    slug = models.SlugField(
+        'Идентификатор',
+        max_length=256,
+        unique=True,
+    )
 
     class Meta:
         verbose_name = 'Категория'
@@ -18,8 +28,15 @@ class Category(models.Model):
 
 
 class Genre(models.Model):
-    name = models.CharField(max_length=256)
-    slug = models.SlugField(max_length=50, unique=True)
+    name = models.CharField(
+        'Название',
+        max_length=256,
+    )
+    slug = models.SlugField(
+        'Идентификатор',
+        max_length=256,
+        unique=True,
+    )
 
     class Meta:
         verbose_name = 'Жанр'
@@ -31,21 +48,30 @@ class Genre(models.Model):
 
 
 class Title(models.Model):
-    name = models.CharField(max_length=256)
-    year = models.PositiveSmallIntegerField(
-        validators=[
-            MaxValueValidator(date.today().year)
-        ]
+    name = models.CharField(
+        'Название',
+        max_length=256,
     )
-    description = models.TextField(blank=True)
+    year = models.PositiveSmallIntegerField(
+        'Год выпуска',
+        validators=[
+            MaxValueValidator(current_year),
+        ],
+    )
+    description = models.TextField(
+        'Описание',
+        blank=True,
+    )
     category = models.ForeignKey(
         Category,
+        verbose_name='Категория',
         on_delete=models.SET_NULL,
         null=True,
         related_name='titles',
     )
     genre = models.ManyToManyField(
         Genre,
+        verbose_name='Жанры',
         related_name='titles',
     )
 

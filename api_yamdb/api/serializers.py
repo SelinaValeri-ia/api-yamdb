@@ -1,5 +1,3 @@
-from datetime import date
-
 from rest_framework import serializers
 
 from reviews.models import Category, Genre, Title
@@ -19,7 +17,10 @@ class GenreSerializer(serializers.ModelSerializer):
 
 class TitleReadSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
-    genre = GenreSerializer(many=True, read_only=True)
+    genre = GenreSerializer(
+        many=True,
+        read_only=True,
+    )
     rating = serializers.IntegerField(read_only=True)
 
     class Meta:
@@ -57,10 +58,3 @@ class TitleSerializer(serializers.ModelSerializer):
             'category',
         )
         read_only_fields = ('id',)
-
-    def validate_year(self, value):
-        if value > date.today().year:
-            raise serializers.ValidationError(
-                'Год выпуска не может быть больше текущего года.'
-            )
-        return value

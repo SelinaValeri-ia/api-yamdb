@@ -1,14 +1,16 @@
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, viewsets
 from rest_framework.filters import SearchFilter
 
 from reviews.models import Category, Genre, Title
 
+from .filters import TitleFilter
 from .permissions import IsAdminOrReadOnly
 from .serializers import (
     CategorySerializer,
     GenreSerializer,
-    TitleSerializer,
     TitleReadSerializer,
+    TitleSerializer,
 )
 
 
@@ -55,33 +57,15 @@ class TitleViewSet(
     )
 
     permission_classes = (IsAdminOrReadOnly,)
-    filter_backends = (SearchFilter,)
+
+    filter_backends = (
+        DjangoFilterBackend,
+        SearchFilter,
+    )
+    filterset_class = TitleFilter
     search_fields = ('name',)
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
             return TitleReadSerializer
         return TitleSerializer
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        params = self.request.query_params
-
-        category = params.get('category')
-        genre = params.get('genre')
-        year = params.get('year')
-        name = params.get('name')
-
-        if category:
-            queryset = queryset.filter(category__slug=category)
-
-        if genre:
-            queryset = queryset.filter(genre__slug=genre)
-
-        if year:
-            queryset = queryset.filter(year=year)
-
-        if name:
-            queryset = queryset.filter(name__icontains=name)
-
-        return queryset.distinct()
