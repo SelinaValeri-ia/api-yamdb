@@ -7,7 +7,7 @@ from django.utils import timezone
 
 
 def get_current_year():
-    """Возвращает текущий"""
+    """Возвращает текущий год."""
     return timezone.now().year
 
 

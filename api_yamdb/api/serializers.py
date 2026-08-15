@@ -1,5 +1,5 @@
 """Сериализаторы регистрации, токена, пользователей и произведений."""
-from django.utils import timezone
+
 from rest_framework import serializers
 
 from reviews.models import (
@@ -70,7 +70,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserMeSerializer(serializers.ModelSerializer):
-    """Профиль пользователя для self-service /users/me/ (роль read-only)."""
+    """Профиль пользователя для self-service /users/me/."""
 
     class Meta:
         model = User
@@ -105,7 +105,10 @@ class TitleReadSerializer(serializers.ModelSerializer):
     """Произведение для чтения: вложенные category/genre и рейтинг."""
 
     category = CategorySerializer(read_only=True)
-    genre = GenreSerializer(many=True, read_only=True)
+    genre = GenreSerializer(
+        many=True,
+        read_only=True,
+    )
     rating = serializers.IntegerField(read_only=True)
 
     class Meta:
@@ -122,7 +125,7 @@ class TitleReadSerializer(serializers.ModelSerializer):
 
 
 class TitleSerializer(serializers.ModelSerializer):
-    """Произведение для создания/изменения: category/genre по slug."""
+    """Произведение для создания и изменения."""
 
     category = serializers.SlugRelatedField(
         slug_field='slug',
@@ -146,13 +149,6 @@ class TitleSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ('id',)
 
-    def validate_year(self, value):
-        if value > timezone.now().year:
-            raise serializers.ValidationError(
-                'Год выпуска не может быть больше текущего года.'
-            )
-        return value
-
 
 class ReviewWriteSerializer(serializers.ModelSerializer):
     class Meta:
@@ -169,7 +165,7 @@ class ReviewWriteSerializer(serializers.ModelSerializer):
 
         if Review.objects.filter(
             author=request.user,
-            title_id=title_id
+            title_id=title_id,
         ).exists():
             raise serializers.ValidationError(
                 'Вы уже оставляли отзыв на это произведение.'

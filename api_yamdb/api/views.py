@@ -1,8 +1,10 @@
 """Вьюхи аутентификации и вьюсеты users/categories/genres/titles."""
+
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
@@ -21,6 +23,7 @@ from reviews.models import (
 )
 from users.models import User
 
+from .filters import TitleFilter
 from .permissions import (
     IsAdmin,
     IsAdminOrReadOnly,
@@ -51,8 +54,12 @@ def signup(request):
     email = serializer.validated_data['email']
     username = serializer.validated_data['username']
 
-    user, _ = User.objects.get_or_create(username=username, email=email)
+    user, _ = User.objects.get_or_create(
+        username=username,
+        email=email,
+    )
     confirmation_code = default_token_generator.make_token(user)
+
     send_mail(
         subject='Код подтверждения для YaMDb',
         message=f'Ваш код подтверждения: {confirmation_code}',
@@ -60,7 +67,10 @@ def signup(request):
         recipient_list=[user.email],
     )
 
-    return Response(serializer.validated_data, status=status.HTTP_200_OK)
+    return Response(
+        serializer.validated_data,
+        status=status.HTTP_200_OK,
+    )
 
 
 @api_view(['POST'])
@@ -69,18 +79,27 @@ def token_obtain(request):
     """Выдаёт JWT-токен по username и коду подтверждения."""
     serializer = TokenSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
+
     username = serializer.validated_data['username']
     confirmation_code = serializer.validated_data['confirmation_code']
 
     user = get_object_or_404(User, username=username)
-    if not default_token_generator.check_token(user, confirmation_code):
+
+    if not default_token_generator.check_token(
+        user,
+        confirmation_code,
+    ):
         return Response(
             {'confirmation_code': 'Неверный код подтверждения.'},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
     token = AccessToken.for_user(user)
-    return Response({'token': str(token)}, status=status.HTTP_200_OK)
+
+    return Response(
+        {'token': str(token)},
+        status=status.HTTP_200_OK,
+    )
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -92,7 +111,12 @@ class UserViewSet(viewsets.ModelViewSet):
     lookup_field = 'username'
     search_fields = ('username',)
     http_method_names = [
-        'get', 'post', 'patch', 'delete', 'head', 'options',
+        'get',
+        'post',
+        'patch',
+        'delete',
+        'head',
+        'options',
     ]
 
     @action(
@@ -105,7 +129,9 @@ class UserViewSet(viewsets.ModelViewSet):
         """Возвращает или обновляет профиль текущего пользователя."""
         if request.method == 'PATCH':
             serializer = UserMeSerializer(
-                request.user, data=request.data, partial=True,
+                request.user,
+                data=request.data,
+                partial=True,
             )
             serializer.is_valid(raise_exception=True)
             serializer.save()
@@ -121,7 +147,7 @@ class CategoryViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
-    """Список, создание и удаление категорий (без detail-эндпоинта)."""
+    """Список, создание и удаление категорий."""
 
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
@@ -137,7 +163,7 @@ class GenreViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
-    """Список, создание и удаление жанров (без detail-эндпоинта)."""
+    """Список, создание и удаление жанров."""
 
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
@@ -155,7 +181,7 @@ class TitleViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
-    """CRUD произведений с рейтингом и фильтрами (без PUT)."""
+    """CRUD произведений с рейтингом и фильтрами."""
 
     queryset = (
         Title.objects
@@ -166,8 +192,14 @@ class TitleViewSet(
     )
 
     permission_classes = (IsAdminOrReadOnly,)
-    filter_backends = (SearchFilter,)
+
+    filter_backends = (
+        DjangoFilterBackend,
+        SearchFilter,
+    )
+    filterset_class = TitleFilter
     search_fields = ('name',)
+
     http_method_names = [
         'get',
         'post',
@@ -181,30 +213,6 @@ class TitleViewSet(
         if self.action in ('list', 'retrieve'):
             return TitleReadSerializer
         return TitleSerializer
-
-    def get_queryset(self):
-        """Фильтрует по category/genre/year/name из query-параметров."""
-        queryset = super().get_queryset()
-        params = self.request.query_params
-
-        category = params.get('category')
-        genre = params.get('genre')
-        year = params.get('year')
-        name = params.get('name')
-
-        if category:
-            queryset = queryset.filter(category__slug=category)
-
-        if genre:
-            queryset = queryset.filter(genre__slug=genre)
-
-        if year:
-            queryset = queryset.filter(year=year)
-
-        if name:
-            queryset = queryset.filter(name__icontains=name)
-
-        return queryset.distinct()
 
 
 class ReviewViewSet(ModelViewSet):
